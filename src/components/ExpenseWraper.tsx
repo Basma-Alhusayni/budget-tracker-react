@@ -2,6 +2,7 @@ import { useState } from "react";
 import ExpenseForm from "./ExpenseForm";
 
 type ExpenseType = {
+  id: string;
   source: string;
   amount: number;
   date: string;
@@ -10,53 +11,33 @@ type ExpenseType = {
 type Props = {
   expenses: ExpenseType[];
   setExpenses: React.Dispatch<React.SetStateAction<ExpenseType[]>>;
+  onDelete: (id: string) => void;
 };
 
-export default function ExpenseWraper({ expenses, setExpenses }: Props) {
-  const [source, setSource] = useState("");
-  const [amount, setAmount] = useState(0);
-  const [date, setDate] = useState("");
-
-  const handleAddSource = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSource(e.target.value);
-  };
-
-  const handleAddAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(Number(e.target.value));
-  };
-
-  const handleAddDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+export default function ExpenseWraper({
+  expenses,
+  setExpenses,
+  onDelete,
+}: Props) {
+  const handleSubmit = (data: Omit<ExpenseType, "id">) => {
     const newExpense: ExpenseType = {
-      source,
-      amount,
-      date: new Date(date).toDateString(),
+      ...data,
+      id: Date.now().toString(),
+      date: new Date(data.date).toDateString(),
     };
-    setExpenses([...expenses, newExpense]);
-    setSource("");
-    setAmount(0);
-    setDate("");
+    setExpenses((prev) => [...prev, newExpense]);
   };
 
   return (
     <>
-      <ExpenseForm
-        handleAddSource={handleAddSource}
-        handleAddAmount={handleAddAmount}
-        handleAddDate={handleAddDate}
-        handleSubmit={handleSubmit}
-        source={source}
-        amount={amount}
-        date={date}
-      />
+      <ExpenseForm onSubmit={handleSubmit} />
       <ul>
-        {expenses.map((expense, index) => (
-          <li key={index}>
+        {expenses.map((expense) => (
+          <li key={expense.id}>
             {expense.source}: {expense.amount}EUR on {expense.date}
+            <button className="delete-btn" onClick={() => onDelete(expense.id)}>
+              Delete
+            </button>
           </li>
         ))}
       </ul>

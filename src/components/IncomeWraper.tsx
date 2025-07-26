@@ -2,6 +2,7 @@ import { useState } from "react";
 import IncomeForm from "./IncomeForm";
 
 type IncomeType = {
+  id: string;
   source: string;
   amount: number;
   date: string;
@@ -10,53 +11,29 @@ type IncomeType = {
 type Props = {
   incomes: IncomeType[];
   setIncomes: React.Dispatch<React.SetStateAction<IncomeType[]>>;
+  onDelete: (id: string) => void;
 };
 
-export default function IncomeWraper({ incomes, setIncomes }: Props) {
-  const [source, setSource] = useState("");
-  const [amount, setAmount] = useState(0);
-  const [date, setDate] = useState("");
-
-  const handleAddSource = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSource(e.target.value);
-  };
-
-  const handleAddAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(Number(e.target.value));
-  };
-
-  const handleAddDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+export default function IncomeWraper({ incomes, setIncomes, onDelete }: Props) {
+  const handleSubmit = (data: Omit<IncomeType, "id">) => {
     const newIncome: IncomeType = {
-      source,
-      amount,
-      date: new Date(date).toDateString(),
+      ...data,
+      id: Date.now().toString(),
+      date: new Date(data.date).toDateString(),
     };
-    setIncomes([...incomes, newIncome]);
-    setSource("");
-    setAmount(0);
-    setDate("");
+    setIncomes((prev) => [...prev, newIncome]);
   };
 
   return (
     <>
-      <IncomeForm
-        handleAddSource={handleAddSource}
-        handleAddAmount={handleAddAmount}
-        handleAddDate={handleAddDate}
-        handleSubmit={handleSubmit}
-        source={source}
-        amount={amount}
-        date={date}
-      />
+      <IncomeForm onSubmit={handleSubmit} />
       <ul>
-        {incomes.map((income, index) => (
-          <li key={index}>
+        {incomes.map((income) => (
+          <li key={income.id}>
             {income.source}: {income.amount}EUR on {income.date}
+            <button className="delete-btn" onClick={() => onDelete(income.id)}>
+              Delete
+            </button>
           </li>
         ))}
       </ul>

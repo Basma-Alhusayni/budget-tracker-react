@@ -1,34 +1,45 @@
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "./Button";
-type Props = {
-  handleAddSource: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleAddAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleAddDate: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: (e: React.FormEvent) => void;
-  source: string;
-  amount: number;
-  date: string;
+
+const incomeSchema = z.object({
+  source: z.string().min(1, "Source is required"),
+  amount: z.number().min(1, "Amount must be at least 1"),
+  date: z.string().min(1, "Date is required"),
+});
+
+type IncomeFormProps = {
+  onSubmit: (data: z.infer<typeof incomeSchema>) => void;
 };
 
-export default function IncomeForm({
-  handleAddSource,
-  handleAddAmount,
-  handleAddDate,
-  handleSubmit,
-  source,
-  amount,
-  date,
-}: Props) {
+export default function IncomeForm({ onSubmit }: IncomeFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: zodResolver(incomeSchema),
+  });
+
+  const submitHandler = (data: any) => {
+    onSubmit(data);
+    reset();
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(submitHandler)}>
       <label>
         Income source
         <input
           type="text"
           placeholder="Type the income source"
-          value={source}
-          onChange={handleAddSource}
-          required
+          {...register("source")}
         />
+        {errors.source && (
+          <span className="error">{errors.source.message}</span>
+        )}
       </label>
 
       <label>
@@ -37,15 +48,17 @@ export default function IncomeForm({
           type="number"
           placeholder="Amount"
           min={1}
-          value={amount}
-          onChange={handleAddAmount}
-          required
+          {...register("amount", { valueAsNumber: true })}
         />
+        {errors.amount && (
+          <span className="error">{errors.amount.message}</span>
+        )}
       </label>
 
       <label>
         Date of income
-        <input type="date" value={date} onChange={handleAddDate} required />
+        <input type="date" {...register("date")} />
+        {errors.date && <span className="error">{errors.date.message}</span>}
       </label>
 
       <Button type="submit" label="Add Income" />
